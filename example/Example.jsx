@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDom from 'react-dom';
 
-
+import A from './A.jsx';
 
 ReactDom.render(
-    <div>ok</div>,
+    <A/>,
     document.getElementById('root')
 )

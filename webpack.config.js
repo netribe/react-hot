@@ -1,3 +1,8 @@
+
+let path = require('path');
+let webpack = require('webpack');
+let ReactHotWebpackPlugin = require('./webpack-plugin.js');
+
 module.exports = {
     mode: "development",
     entry: './example/Example.jsx',
@@ -21,5 +26,8 @@ module.exports = {
             }
         ]
     },
-    plugins: []
+    plugins: [
+        new webpack.HotModuleReplacementPlugin(),
+        new ReactHotWebpackPlugin()
+    ]
 }
