@@ -4,7 +4,7 @@
   "description": "react hot loading for webpack",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "example": "webpack --watch --config webpack.config.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,13 @@
   },
   "homepage": "https://github.com/netribe/react-hot#readme",
   "devDependencies": {
+    "@babel/core": "^7.12.17",
+    "@babel/plugin-proposal-object-rest-spread": "^7.12.13",
+    "@babel/preset-env": "^7.12.17",
+    "@babel/preset-react": "^7.12.13",
+    "babel-loader": "^8.2.2",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
     "webpack": "^5.23.0",
     "webpack-cli": "^4.5.0"
   },
