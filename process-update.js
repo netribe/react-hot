@@ -68,7 +68,7 @@ if (!module.hot) {
         var applyCallback = function (applyErr, renewedModules) {
           if (applyErr) return handleError(applyErr);
   
-          if (!upToDate()) check();
+        //   if (!upToDate()) check();
   
           logUpdates(updatedModules, renewedModules);
         };

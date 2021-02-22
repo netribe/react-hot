@@ -1,23 +1,35 @@
 
 const WebSocket = require('ws');
 
-const wss = new WebSocket.Server({ port: 8888 });
 
-const broadcast = (obj) => {
-    let data = JSON.stringify(obj)
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(data);
-        }
-    });
-}
 
 class ReactHotWebpackPlugin{
     constructor(opts){
         this.opts = opts;
     }
     apply(compiler){
+
+        const wss = new WebSocket.Server({ port: 8888 });
+
+        const broadcast = (obj) => {
+            let data = JSON.stringify(obj)
+            wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(data);
+                }
+            });
+        }
+
+        wss.on('connection', (ws) => {
+            if(latestStats){
+                getBundles(latestStats, bundle => {
+                    ws.send(JSON.stringify(bundle))
+                })
+            }
+        });
+
         let opts = this.opts || { log: console.log };
+        let latestStats = null;
         if (compiler.hooks) {
             compiler.hooks.invalid.tap('webpack-hot-middleware', onInvalid);
             compiler.hooks.done.tap('webpack-hot-middleware', onDone);
@@ -25,11 +37,8 @@ class ReactHotWebpackPlugin{
             compiler.plugin('invalid', onInvalid);
             compiler.plugin('done', onDone);
         }
-        function onInvalid() {
-            if (opts.log) opts.log('webpack building...');
-                broadcast({ action: 'building' });
-            }
-        function onDone(statsResult) {
+
+        const getBundles = (statsResult, callback) => {
             var stats = statsResult.toJson({
                 all: false,
                 cached: true,
@@ -51,7 +60,7 @@ class ReactHotWebpackPlugin{
                 if (opts.log) {
                     opts.log(`webpack built ${name || ''} ${ stats.hash} in ${stats.time}ms`);
                 }
-                broadcast({
+                callback({
                   name: name,
                   action: 'built',
                   time: stats.time,
@@ -61,6 +70,16 @@ class ReactHotWebpackPlugin{
                   modules: buildModuleMap(stats.modules),
                 });
             });
+        }
+        function onInvalid() {
+            if (opts.log) opts.log('webpack building...');
+            latestStats = null;
+            broadcast({ action: 'building' });
+        }
+        function onDone(statsResult) {
+            latestStats = statsResult;
+            console.log('done')
+            getBundles(statsResult, broadcast);
         }
     }
 }

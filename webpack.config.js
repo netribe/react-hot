@@ -9,7 +9,9 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, './example'),
         filename: 'build.js',
-        publicPath: './'
+        publicPath: './',
+        hotUpdateChunkFilename: 'hot/hot-update.js',
+        hotUpdateMainFilename: 'hot/hot-update.json'
     },
     module: {
         rules: [

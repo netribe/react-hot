@@ -1,5 +1,9 @@
 
-var options = {
+let processUpdate = require('./process-update');
+let socket;
+
+
+let options = {
     overlay: true,
     reload: false,
     log: true,
@@ -10,14 +14,13 @@ var options = {
     ansiColors: {},
   };
 
-var processUpdate = require('./process-update');
   
   // the reporter needs to be a singleton on the page
   // in case the client is being used by multiple bundles
   // we only want to report once.
   // all the errors will go to all clients
-  var singletonKey = '__webpack_hot_middleware_reporter__';
-  var reporter;
+  let singletonKey = '__webpack_hot_middleware_reporter__';
+  let reporter;
   if (typeof window !== 'undefined') {
     if (!window[singletonKey]) {
       window[singletonKey] = createReporter();
@@ -26,9 +29,9 @@ var processUpdate = require('./process-update');
   }
   
   function createReporter() {
-    var strip = require('strip-ansi');
+    let strip = require('strip-ansi');
   
-    var overlay;
+    let overlay;
     if (typeof document !== 'undefined' && options.overlay) {
       overlay = require('./client-overlay')({
         ansiColors: options.ansiColors,
@@ -36,13 +39,13 @@ var processUpdate = require('./process-update');
       });
     }
   
-    var styles = {
+    let styles = {
       errors: 'color: #ff0000;',
       warnings: 'color: #999933;',
     };
-    var previousProblems = null;
+    let previousProblems = null;
     function log(type, obj) {
-      var newProblems = obj[type]
+      let newProblems = obj[type]
         .map(function (msg) {
           return strip(msg);
         })
@@ -53,9 +56,9 @@ var processUpdate = require('./process-update');
         previousProblems = newProblems;
       }
   
-      var style = styles[type];
-      var name = obj.name ? "'" + obj.name + "' " : '';
-      var title = '[HMR] bundle ' + name + 'has ' + obj[type].length + ' ' + type;
+      let style = styles[type];
+      let name = obj.name ? "'" + obj.name + "' " : '';
+      let title = '[HMR] bundle ' + name + 'has ' + obj[type].length + ' ' + type;
       // NOTE: console.warn or console.error will print the stack trace
       // which isn't helpful here, so using console.log to escape it.
       if (console.group && console.groupEnd) {
@@ -99,63 +102,66 @@ var processUpdate = require('./process-update');
   
   
   
-  function processMessage(obj) {
+const processMessage = (obj) => {
+    // console.log('process', obj)
     switch (obj.action) {
-      case 'building':
+        case 'building':
         if (options.log) {
-          console.log(
-            '[HMR] bundle ' +
-              (obj.name ? "'" + obj.name + "' " : '') +
-              'rebuilding'
-          );
+            console.log(`[HMR] bundle ${obj.name || ""} rebuilding`);
         }
         break;
-      case 'built':
+        case 'built':
         if (options.log) {
-          console.log(
-            '[HMR] bundle ' +
-              (obj.name ? "'" + obj.name + "' " : '') +
-              'rebuilt in ' +
-              obj.time +
-              'ms'
-          );
+            console.log(`[HMR] bundle ${obj.name || ""} rebuilt in ${obj.time}ms`);
         }
-      // fall through
-      case 'sync':
+        // fall through
+        case 'sync':
         if (obj.name && options.name && obj.name !== options.name) {
-          return;
+            return;
         }
-        var applyUpdate = true;
+        let applyUpdate = true;
         if (obj.errors.length > 0) {
-          if (reporter) reporter.problems('errors', obj);
-          applyUpdate = false;
+            if (reporter) reporter.problems('errors', obj);
+            applyUpdate = false;
         } else if (obj.warnings.length > 0) {
-          if (reporter) {
-            var overlayShown = reporter.problems('warnings', obj);
+            if (reporter) {
+            let overlayShown = reporter.problems('warnings', obj);
             applyUpdate = overlayShown;
-          }
+            }
         } else {
-          if (reporter) {
+            if (reporter) {
             reporter.cleanProblemsCache();
             reporter.success();
-          }
+            }
         }
         if (applyUpdate) {
-          processUpdate(obj.hash, obj.modules, options);
+            processUpdate(obj.hash, obj.modules, options);
         }
         break;
     }
-  }
+    }
+
+const connect = () => {
+    socket = new WebSocket('ws://localhost:8888');
+    socket.addEventListener('open', e => { if (options.log) console.log('[HMR] connected'); })
+    socket.addEventListener('message', e => {
+        processMessage(JSON.parse(e.data));
+    });
+    socket.addEventListener('close', e => { 
+        if (options.log) console.log('[HMR] closed');
+        setTimeout(connect, 1000)
+    });
+}
   
 module.exports = {
     connect(){
         if(window.__react_hot){ return; }
         window.__react_hot = 1;
-        const socket = new WebSocket('ws://localhost:8888');
-        socket.addEventListener('open', e => { if (options.log) console.log('[HMR] connected'); })
-        socket.addEventListener('message', e => {
-            processMessage(JSON.parse(e.data));
-        });
-        socket.addEventListener('close', e => { if (options.log) console.log('[HMR] closed'); })
+        connect();
+    },
+    disconnect(){
+        if(window.__react_hot){ return; }
+        window.__react_hot = 1;
+        socket.close();
     }
 };
