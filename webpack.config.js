@@ -1,11 +1,11 @@
 
 let path = require('path');
 let webpack = require('webpack');
-let ReactHotWebpackPlugin = require('./webpack-plugin.js');
+let ReactHotWebpackPlugin = require('./webpack-plugin');
 
 module.exports = {
     mode: "development",
-    entry: './example/Example.jsx',
+    entry: ['./client','./example/Example.jsx'],
     output: {
         path: path.resolve(__dirname, './example'),
         filename: 'build.js',

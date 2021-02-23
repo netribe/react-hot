@@ -4,7 +4,7 @@ export default class B extends React.Component{
     render(){
         return (
             <div>
-                <div>123</div>
+                <div>55555</div>
                 { this.props.children }
             </div>
         );

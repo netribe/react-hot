@@ -149,7 +149,7 @@ const connect = () => {
     });
     socket.addEventListener('close', e => { 
         if (options.log) console.log('[HMR] closed');
-        setTimeout(connect, 1000)
+        // setTimeout(connect, 1000)
     });
 }
   
